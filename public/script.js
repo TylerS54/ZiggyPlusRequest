@@ -20,7 +20,7 @@ async function searchIMDB() {
     }
 
     try {
-        const response = await fetch(`http://www.omdbapi.com/?${queryParam}&apikey=${apiKey}`);
+        const response = await fetch(`https://www.omdbapi.com/?${queryParam}&apikey=${apiKey}`);
         const data = await response.json();
 
         if (data.Response === "True") {
