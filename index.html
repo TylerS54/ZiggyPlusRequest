@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggy+ Request Search</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>What the fuck do you want?</h1>
+        <input type="text" id="imdbInput" placeholder="Search for Movie or TV Show...">
+        <button onclick="searchIMDB()">Search</button>
+        <div id="result">
+            <h2 id="title"></h2>
+            <img id="splashArt" src="" alt="Splash Art">
+            <p id="type"></p>
+            <p id="year"></p>
+            <p id="rating"></p>
+        </div>
+        <button id="ziggyButton" style="display: none;" onclick="sendToTelegram()">Ziggy+ Request This</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
