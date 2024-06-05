@@ -7,7 +7,7 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    padding: 0 20px;
+    padding: 20px 20px;
     box-sizing: border-box;
     overflow: hidden; /* Prevent body from scrolling */
 }
