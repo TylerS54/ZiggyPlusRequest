@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ziggy+ Request Search</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Firebase SDK -->
     <script defer src="/__/firebase/10.12.2/firebase-app-compat.js"></script>
     <script defer src="/__/firebase/10.12.2/firebase-auth-compat.js"></script>
@@ -19,19 +23,29 @@
     <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>What the fuck do you want?</h1>
-        <input type="text" id="imdbInput" placeholder="Search for Movie or TV Show...">
-        <button onclick="searchIMDB()">Search</button>
-        <div id="result">
-            <h2 id="title"></h2>
-            <img id="splashArt" src="" alt="Splash Art">
-            <p id="type"></p>
-            <p id="year"></p>
-            <p id="rating"></p>
+    <div class="container small">
+        <div id="searchContainer" class="search-container">
+            <h1>Ziggy+ Request Search</h1>
+            <input type="text" id="imdbInput" placeholder="Search for Movie or TV Show...">
+            <div class="media-type-selector">
+                <label>
+                    <input type="radio" name="mediaType" value="both" checked> Both
+                </label>
+                <label>
+                    <input type="radio" name="mediaType" value="movie"> Movie
+                </label>
+                <label>
+                    <input type="radio" name="mediaType" value="tv"> TV Show
+                </label>
+            </div>
+            <button onclick="searchTMDB()">Search</button>
         </div>
-        <button id="ziggyButton" style="display: none;" onclick="sendToTelegram()">Ziggy+ Request This</button>
+        <div id="resultsContainer" class="results-container">
+            <div id="results" class="results"></div>
+        </div>
     </div>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
