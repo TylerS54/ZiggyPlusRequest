@@ -28,11 +28,17 @@ body {
 }
 
 .container.small {
-    height: 20vh;
+    height: 15vh;
 }
 
 .container.large {
     height: 100%; /* Ensure the container takes full height */
+}
+
+@media (max-width: 600px) {
+    .container.small {
+        height: 30vh; /* Adjust height for smaller screens */
+    }
 }
 
 .search-container {
