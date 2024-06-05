@@ -99,7 +99,6 @@ async function loadResults(query, mediaType) {
                     closeOnSelect: false
                 });
                 
-                
             });
         } else if (currentPage === 1) {
             const noResults = document.createElement('div');
@@ -137,8 +136,6 @@ async function checkIfTVShowExists(title) {
     }
     return null;
 }
-
-
 
 async function checkIfSeasonsExist(ratingKey, seasons) {
     const url = `https://96-245-100-126.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/metadata/${ratingKey}/children?X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
@@ -222,7 +219,7 @@ Poster: ${details.poster}
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            chat_id: '-4285186614', 
+            chat_id: '-4285186614',  // Replace with your Telegram chat ID
             text: message
         })
     })
@@ -241,11 +238,6 @@ Poster: ${details.poster}
         console.error('Error sending message to Telegram:', error);
     });
 }
-
-
-
-
-
 
 document.getElementById('imdbInput').addEventListener('keypress', function(event) {
     if (event.key === 'Enter') {

@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: #121212; /* Dark background */
+    color: #e0e0e0; /* Light text color */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -9,20 +9,22 @@ body {
     margin: 0;
     padding: 0 20px;
     box-sizing: border-box;
+    overflow: hidden; /* Prevent body from scrolling */
 }
 
 .container {
-    background: #fff;
+    background: #1e1e1e; /* Slightly lighter dark background */
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Stronger shadow */
     text-align: center;
     width: 100%;
     max-width: 1200px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: height 0.5s;
+    transition: height 0.5s ease;
+    height: 100%; /* Ensure the container takes full height */
 }
 
 .container.small {
@@ -30,7 +32,7 @@ body {
 }
 
 .container.large {
-    height: 90vh;
+    height: 100%; /* Ensure the container takes full height */
 }
 
 .search-container {
@@ -45,6 +47,10 @@ body {
     width: 80%;
     padding: 10px;
     margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #333; /* Dark border */
+    background-color: #333; /* Darker input background */
+    color: #e0e0e0; /* Light text color */
 }
 
 .media-type-selector {
@@ -65,6 +71,7 @@ button {
     border-radius: 4px;
     cursor: pointer;
     margin-bottom: 20px;
+    transition: background-color 0.3s;
 }
 
 button:hover {
@@ -76,6 +83,7 @@ button:hover {
     overflow-y: auto;
     display: none;
     margin-top: 20px;
+    height: 70vh; /* Set a height to ensure scrolling within this container */
 }
 
 .results {
@@ -86,10 +94,10 @@ button:hover {
 }
 
 .result-item {
-    background: #f9f9f9;
+    background: #2c2c2c; /* Darker background for result items */
     padding: 15px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Stronger shadow */
     display: flex;
     align-items: flex-start;
     gap: 15px;
@@ -125,6 +133,7 @@ button:hover {
     border-radius: 4px;
     cursor: pointer;
     align-self: center;
+    transition: background-color 0.3s;
 }
 
 .ziggyButton:hover {
@@ -164,9 +173,11 @@ button:hover {
 .multi-select {
     width: calc(100% - 20px); /* Adjust the width to fit within the container padding */
     margin-top: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #333; /* Dark border */
     border-radius: 4px;
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    background-color: #333; /* Darker background for select */
+    color: #e0e0e0; /* Light text color */
 }
 
 .select2-container {
@@ -174,18 +185,61 @@ button:hover {
     box-sizing: border-box;
 }
 
+
 .select2-container--default .select2-selection--multiple {
-    background-color: white;
-    border: 1px solid #aaa;
+    background-color: #333; /* Darker background for select */
+    border: 1px solid #333; /* Dark border */
     border-radius: 4px;
     cursor: text;
+    color: #e0e0e0; /* Light text color */
 }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
-    background-color: #007bff;
-    border: 1px solid #0056b3;
+.select2-container--default .select2-selection--multiple .select2-selection__choice  {
+    background-color: #555; /* Darker background for selected options */
+    border: 1px solid #333; /* Darker border for better contrast */
     border-radius: 4px;
-    color: white;
+    color: black;
     padding: 2px 5px;
     margin-top: 2px;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: white;
+}
+
+.select2-container--default .select2-results__option {
+    background-color: #333; /* Darker background for dropdown options */
+    color: #e0e0e0; /* Light text color */
+}
+
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #007bff;
+    color: white;
+}
+.select2-container--default .select2-results__option--selected {
+    background-color: #555 !important; /* Darker background for selected options */
+    color: #e0e0e0 !important; /* Light text color */
+}
+
+/* Fix for dark theme select2 dropdown text */
+.select2-container--default .select2-selection--multiple .select2-selection__rendered {
+    color: #e0e0e0; /* Light text color */
+}
+
+.select2-dropdown {
+    background-color: #333; /* Darker background for dropdown */
+    color: #e0e0e0; /* Light text color */
+}
+
+.select2-results__option[aria-selected=true] {
+    background-color: #007bff;
+    color: white;
+}
+
+
+/* Adjust the width of the multi-select dropdown to fit within the container */
+.select2-container--default .select2-selection--multiple {
+    width: 100%;
+    box-sizing: border-box;
 }
