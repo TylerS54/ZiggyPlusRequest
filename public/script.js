@@ -163,6 +163,7 @@ async function sendToTelegram(buttonElement, id) {
 
     console.log('Details:', details);
 
+    let seasonSelect;
     if (type === 'movie') {
         const exists = await checkIfMovieExists(title, studio, year);
         if (exists) {
@@ -170,7 +171,7 @@ async function sendToTelegram(buttonElement, id) {
             return;
         }
     } else if (type === 'TV Show') {
-        const seasonSelect = document.getElementById(`seasonSelect-${id}`);
+        seasonSelect = document.getElementById(`seasonSelect-${id}`);
         if (details.seasons > 1 && seasonSelect.selectedOptions.length === 0) {
             alert('Please select at least one season.');
             return;
@@ -240,6 +241,7 @@ Poster: ${details.poster}
         console.error('Error sending message to Telegram:', error);
     });
 }
+
 
 
 
