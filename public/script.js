@@ -167,7 +167,7 @@ async function sendToTelegram(buttonElement, id) {
     if (type === 'movie') {
         const exists = await checkIfMovieExists(title, studio, year);
         if (exists) {
-            alert('This movie already exists in the library.');
+            alert('Bruh...Did you even check Ziggy+? We have it already.');
             return;
         }
     } else if (type === 'TV Show') {
@@ -185,7 +185,7 @@ async function sendToTelegram(buttonElement, id) {
             const missingSeasons = await checkIfSeasonsExist(ratingKey, selectedSeasons);
             console.log('Missing Seasons:', missingSeasons); // Log missing seasons for debugging
             if (missingSeasons.length === 0) {
-                alert('All selected seasons already exist in the library.');
+                alert('Bruh...Did you even check Ziggy+? We have all of the seasons you selected.');
                 return;
             } else {
                 details.missingSeasons = missingSeasons;
@@ -222,7 +222,7 @@ Poster: ${details.poster}
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            chat_id: '-4285186614',  // Replace with your Telegram chat ID
+            chat_id: '-4285186614', 
             text: message
         })
     })
