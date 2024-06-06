@@ -239,6 +239,11 @@ Poster: ${details.poster}
     });
 }
 
+document.getElementById('imdbInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        searchTMDB();
+    }
+});
 
 // Infinite scrolling
 const resultsContainer = document.getElementById('resultsContainer');

@@ -28,7 +28,7 @@ body {
 }
 
 .container.small {
-    height: 20vh;
+    height: 25vh;
 }
 
 .container.large {
@@ -37,7 +37,7 @@ body {
 
 @media (max-width: 600px) {
     .container.small {
-        height: 30vh; /* Adjust height for smaller screens */
+        height: 35vh; /* Adjust height for smaller screens */
     }
 }
 
@@ -248,4 +248,27 @@ button:hover {
 .select2-container--default .select2-selection--multiple {
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Styles for the donation buttons */
+.donation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.donation-button {
+    padding: 10px 20px;
+    background-color: #ff9800;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.donation-button:hover {
+    background-color: #e68900;
 }
