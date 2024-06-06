@@ -37,7 +37,7 @@ body {
 
 @media (max-width: 600px) {
     .container.small {
-        height: 35vh; /* Adjust height for smaller screens */
+        height: 40vh; /* Adjust height for smaller screens */
     }
 }
 
