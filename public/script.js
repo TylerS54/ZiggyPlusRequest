@@ -169,7 +169,7 @@ async function sendToTelegram(buttonElement, id) {
         }
     } else if (type === 'TV Show') {
         seasonSelect = document.getElementById(`seasonSelect-${id}`);
-        if (details.seasons > 1 && seasonSelect.selectedOptions.length === 0) {
+        if (details.seasons > 1 && seasonSelect && seasonSelect.selectedOptions.length === 0) {
             alert('Please select at least one season.');
             return;
         }
@@ -177,7 +177,7 @@ async function sendToTelegram(buttonElement, id) {
         const ratingKey = await checkIfTVShowExists(title);
         console.log('Rating Key:', ratingKey); // Log the rating key for debugging
         if (ratingKey) {
-            const selectedSeasons = Array.from(seasonSelect.selectedOptions).map(option => option.value);
+            const selectedSeasons = seasonSelect ? Array.from(seasonSelect.selectedOptions).map(option => option.value) : [];
             console.log('Selected Seasons:', selectedSeasons); // Log selected seasons for debugging
             const missingSeasons = await checkIfSeasonsExist(ratingKey, selectedSeasons);
             console.log('Missing Seasons:', missingSeasons); // Log missing seasons for debugging
@@ -194,7 +194,7 @@ async function sendToTelegram(buttonElement, id) {
 
     let selectedSeasons = '';
     if (details.type === 'TV Show') {
-        selectedSeasons = Array.from(seasonSelect.selectedOptions).map(option => option.value).join(', ');
+        selectedSeasons = seasonSelect ? Array.from(seasonSelect.selectedOptions).map(option => option.value).join(', ') : '';
     }
 
     const message = `
@@ -239,11 +239,6 @@ Poster: ${details.poster}
     });
 }
 
-document.getElementById('imdbInput').addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        searchTMDB();
-    }
-});
 
 // Infinite scrolling
 const resultsContainer = document.getElementById('resultsContainer');
