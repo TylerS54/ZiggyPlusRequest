@@ -112,7 +112,7 @@ async function loadResults(query, mediaType) {
 }
 
 async function checkIfMovieExists(title, studio, year) {
-    const url = `https://96-245-100-126.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/sections/3/all?title=${encodeURIComponent(title)}&studio=${encodeURIComponent(studio)}&year=${year}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
+    const url = `https://100-14-206-238.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/sections/3/all?title=${encodeURIComponent(title)}&studio=${encodeURIComponent(studio)}&year=${year}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
     const response = await fetch(url);
     const xmlText = await response.text();
     const parser = new DOMParser();
@@ -122,7 +122,7 @@ async function checkIfMovieExists(title, studio, year) {
 }
 
 async function checkIfTVShowExists(title) {
-    const url = `https://96-245-100-126.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/sections/2/all?title=${encodeURIComponent(title)}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
+    const url = `https://100-14-206-238.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/sections/2/all?title=${encodeURIComponent(title)}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
     const response = await fetch(url);
     const xmlText = await response.text();
     console.log('XML Response:', xmlText); // Log the response for debugging
@@ -138,7 +138,7 @@ async function checkIfTVShowExists(title) {
 }
 
 async function checkIfSeasonsExist(ratingKey, seasons) {
-    const url = `https://96-245-100-126.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/metadata/${ratingKey}/children?X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
+    const url = `https://100-14-206-238.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/metadata/${ratingKey}/children?X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
     const response = await fetch(url);
     const xmlText = await response.text();
     const parser = new DOMParser();
