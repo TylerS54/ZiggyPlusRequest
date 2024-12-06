@@ -49,7 +49,8 @@ body {
     transition: height 0.5s;
 }
 
-#imdbInput {
+#imdbInput,
+#requestorName {
     width: 80%;
     padding: 10px;
     margin-bottom: 10px;
@@ -57,6 +58,10 @@ body {
     border: 1px solid #333; /* Dark border */
     background-color: #333; /* Darker input background */
     color: #e0e0e0; /* Light text color */
+}
+
+#requestorName {
+    margin-top: 10px;
 }
 
 .media-type-selector {
@@ -272,3 +277,4 @@ button:hover {
 .donation-button:hover {
     background-color: #e68900;
 }
+

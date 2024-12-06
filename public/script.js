@@ -5,16 +5,27 @@ let currentPage = 1;
 let totalPages = 1;
 let currentQuery = '';
 
-// Resolve the Plex base URL dynamically by fetching ziggyplus.org
+async function resolveIP(domain) {
+    const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
+        headers: { 'Accept': 'application/dns-json' }
+    });
+    const dnsData = await response.json();
+
+    // Find the first A record
+    const aRecord = dnsData.Answer && dnsData.Answer.find(record => record.type === 1);
+    if (!aRecord) {
+        throw new Error(`No A record found for ${domain}`);
+    }
+    return aRecord.data;
+}
+
 async function getBasePlexURL() {
     if (window.basePlexURL) return window.basePlexURL;
-    // Attempt to fetch from ziggyplus.org:32400. It should redirect to the plex.direct URL
-    const response = await fetch('https://ziggyplus.org:32400', { method: 'HEAD', redirect: 'follow' });
-    const finalUrl = new URL(response.url);
-    // Construct base Plex URL from final resolved hostname
-    window.basePlexURL = `${finalUrl.protocol}//${finalUrl.hostname}:32400`;
+    const ip = await resolveIP('ziggyplus.org');
+    window.basePlexURL = `https://${ip}.4730d278dc5048d9affc7bebed62465b.plex.direct:32400`;
     return window.basePlexURL;
 }
+
 
 async function searchTMDB() {
     currentPage = 1;
