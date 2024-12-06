@@ -21,10 +21,16 @@ async function resolveIP(domain) {
 
 async function getBasePlexURL() {
     if (window.basePlexURL) return window.basePlexURL;
+
     const ip = await resolveIP('ziggyplus.org');
-    window.basePlexURL = `https://${ip}.4730d278dc5048d9affc7bebed62465b.plex.direct:32400`;
+    // Replace '.' with '-' in the IP
+    const ipDashed = ip.replace(/\./g, '-');
+    // Construct the plex.direct URL using the dashed IP
+    window.basePlexURL = `https://${ipDashed}.4730d278dc5048d9affc7bebed62465b.plex.direct:32400`;
+    
     return window.basePlexURL;
 }
+
 
 
 async function searchTMDB() {
