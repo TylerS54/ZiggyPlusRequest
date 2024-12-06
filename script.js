@@ -12,12 +12,10 @@ async function searchTMDB() {
     const ziggyButton = document.getElementById('ziggyButton');
 
     try {
-        // Search for movies or TV shows by query
         const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(input)}`);
         const data = await response.json();
 
         if (data.results && data.results.length > 0) {
-            // Take the first result as an example
             const firstResult = data.results[0];
             let detailedResponse;
             if (firstResult.media_type === 'movie') {
@@ -37,7 +35,7 @@ async function searchTMDB() {
             result.style.display = 'block';
             ziggyButton.style.display = 'inline-block';
 
-            // Store movie details in the button dataset for later use
+            // Store details in the button dataset
             ziggyButton.dataset.details = JSON.stringify({
                 title: detailedData.title || detailedData.name,
                 year: detailedData.release_date ? detailedData.release_date.split('-')[0] : detailedData.first_air_date.split('-')[0],
@@ -63,7 +61,10 @@ async function searchTMDB() {
 async function sendToTelegram() {
     const ziggyButton = document.getElementById('ziggyButton');
     const details = JSON.parse(ziggyButton.dataset.details);
+    const requestorName = document.getElementById('requestorName').value || 'Anonymous';
+
     const message = `
+Name: ${requestorName}
 Title: ${details.title}
 Year: ${details.year}
 Type: ${details.type}
@@ -78,7 +79,7 @@ Poster: ${details.poster}
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                chat_id: '-4285186614',  // Replace with your Telegram chat ID
+                chat_id: '-4285186614',
                 text: message
             })
         });

@@ -5,6 +5,17 @@ let currentPage = 1;
 let totalPages = 1;
 let currentQuery = '';
 
+// Resolve the Plex base URL dynamically by fetching ziggyplus.org
+async function getBasePlexURL() {
+    if (window.basePlexURL) return window.basePlexURL;
+    // Attempt to fetch from ziggyplus.org:32400. It should redirect to the plex.direct URL
+    const response = await fetch('https://ziggyplus.org:32400', { method: 'HEAD', redirect: 'follow' });
+    const finalUrl = new URL(response.url);
+    // Construct base Plex URL from final resolved hostname
+    window.basePlexURL = `${finalUrl.protocol}//${finalUrl.hostname}:32400`;
+    return window.basePlexURL;
+}
+
 async function searchTMDB() {
     currentPage = 1;
     const input = document.getElementById('imdbInput').value;
@@ -48,19 +59,17 @@ async function loadResults(query, mediaType) {
                 } else if (result.name) {
                     detailedResponse = await fetch(`https://api.themoviedb.org/3/tv/${result.id}?api_key=${mov_sec}`);
                     detailedData = await detailedResponse.json();
-                    detailedData.seasons_count = detailedData.number_of_seasons;  // Adding seasons count to detailedData
-
+                    detailedData.seasons_count = detailedData.number_of_seasons;  // Adding seasons count
                     // Determine year range
                     const firstYear = detailedData.first_air_date ? detailedData.first_air_date.split('-')[0] : 'Unknown';
                     const lastYear = detailedData.last_air_date ? detailedData.last_air_date.split('-')[0] : new Date().getFullYear();
                     detailedData.year_range = `${firstYear}-${lastYear}`;
-
                     mediaType = 'TV Show';
                 }
 
                 const resultItem = document.createElement('div');
                 resultItem.className = 'result-item';
-                
+
                 const details = JSON.stringify({
                     title: detailedData.title || detailedData.name,
                     year: detailedData.release_date ? detailedData.release_date.split('-')[0] : detailedData.year_range,
@@ -70,7 +79,7 @@ async function loadResults(query, mediaType) {
                     studio: detailedData.production_companies.length > 0 ? detailedData.production_companies[0].name : '',
                     seasons: detailedData.seasons_count
                 }).replace(/'/g, "&apos;").replace(/"/g, '&quot;');
-                
+
                 resultItem.innerHTML = `
                     <img src="https://image.tmdb.org/t/p/w500${detailedData.poster_path}" alt="${detailedData.title || detailedData.name}">
                     <div>
@@ -91,14 +100,14 @@ async function loadResults(query, mediaType) {
                     </div>
                 `;
                 resultsContainer.appendChild(resultItem);
-                
-                // Initialize Select2
+
+                // Initialize Select2 for multi-select seasons
                 $(`#seasonSelect-${detailedData.id}`).select2({
                     placeholder: "Select Seasons",
                     allowClear: true,
                     closeOnSelect: false
                 });
-                
+
             });
         } else if (currentPage === 1) {
             const noResults = document.createElement('div');
@@ -112,7 +121,8 @@ async function loadResults(query, mediaType) {
 }
 
 async function checkIfMovieExists(title, studio, year) {
-    const url = `https://96-245-166-95.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/sections/3/all?title=${encodeURIComponent(title)}&studio=${encodeURIComponent(studio)}&year=${year}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
+    const baseURL = await getBasePlexURL();
+    const url = `${baseURL}/library/sections/3/all?title=${encodeURIComponent(title)}&studio=${encodeURIComponent(studio)}&year=${year}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
     const response = await fetch(url);
     const xmlText = await response.text();
     const parser = new DOMParser();
@@ -122,23 +132,23 @@ async function checkIfMovieExists(title, studio, year) {
 }
 
 async function checkIfTVShowExists(title) {
-    const url = `https://96-245-166-95.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/sections/2/all?title=${encodeURIComponent(title)}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
+    const baseURL = await getBasePlexURL();
+    const url = `${baseURL}/library/sections/2/all?title=${encodeURIComponent(title)}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
     const response = await fetch(url);
     const xmlText = await response.text();
-    console.log('XML Response:', xmlText); // Log the response for debugging
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
     const size = xmlDoc.getElementsByTagName('MediaContainer')[0].getAttribute('size');
     if (size > 0) {
         const ratingKey = xmlDoc.getElementsByTagName('Directory')[0].getAttribute('ratingKey');
-        console.log('Rating Key:', ratingKey); // Log the rating key for debugging
         return ratingKey;
     }
     return null;
 }
 
 async function checkIfSeasonsExist(ratingKey, seasons) {
-    const url = `https://96-245-166-95.4730d278dc5048d9affc7bebed62465b.plex.direct:32400/library/metadata/${ratingKey}/children?X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
+    const baseURL = await getBasePlexURL();
+    const url = `${baseURL}/library/metadata/${ratingKey}/children?X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
     const response = await fetch(url);
     const xmlText = await response.text();
     const parser = new DOMParser();
@@ -154,13 +164,15 @@ async function sendToTelegram(buttonElement, id) {
         console.error('No details found for the selected item.');
         return;
     }
-    
+
     const details = JSON.parse(detailsString.replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
     const { title, studio, year, type } = details;
 
+    // Get the requestor's name
+    const requestorName = document.getElementById('requestorName').value || 'Anonymous';
+
     console.log('Details:', details);
 
-    let seasonSelect;
     if (type === 'movie') {
         const exists = await checkIfMovieExists(title, studio, year);
         if (exists) {
@@ -168,19 +180,16 @@ async function sendToTelegram(buttonElement, id) {
             return;
         }
     } else if (type === 'TV Show') {
-        seasonSelect = document.getElementById(`seasonSelect-${id}`);
+        const seasonSelect = document.getElementById(`seasonSelect-${id}`);
         if (details.seasons > 1 && seasonSelect && seasonSelect.selectedOptions.length === 0) {
             alert('Please select at least one season.');
             return;
         }
 
         const ratingKey = await checkIfTVShowExists(title);
-        console.log('Rating Key:', ratingKey); // Log the rating key for debugging
         if (ratingKey) {
             const selectedSeasons = seasonSelect ? Array.from(seasonSelect.selectedOptions).map(option => option.value) : [];
-            console.log('Selected Seasons:', selectedSeasons); // Log selected seasons for debugging
             const missingSeasons = await checkIfSeasonsExist(ratingKey, selectedSeasons);
-            console.log('Missing Seasons:', missingSeasons); // Log missing seasons for debugging
             if (missingSeasons.length === 0) {
                 alert('Bruh...Did you even check Ziggy+? We have all of the seasons you selected.');
                 return;
@@ -194,10 +203,12 @@ async function sendToTelegram(buttonElement, id) {
 
     let selectedSeasons = '';
     if (details.type === 'TV Show') {
+        const seasonSelect = document.getElementById(`seasonSelect-${id}`);
         selectedSeasons = seasonSelect ? Array.from(seasonSelect.selectedOptions).map(option => option.value).join(', ') : '';
     }
 
     const message = `
+Name: ${requestorName}
 Title: ${details.title}
 Year: ${details.year}
 Type: ${details.type}
