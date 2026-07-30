@@ -1,37 +1,6 @@
-const mov_sec = '7d35ad4e705bc608347860298023d6d5'; 
-const tok = '7394832212:AAGi9nInkJYeK-YeyeU-_n8wc9G3YtGELNg';
-
 let currentPage = 1;
 let totalPages = 1;
 let currentQuery = '';
-
-async function resolveIP(domain) {
-    const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
-        headers: { 'Accept': 'application/dns-json' }
-    });
-    const dnsData = await response.json();
-
-    // Find the first A record
-    const aRecord = dnsData.Answer && dnsData.Answer.find(record => record.type === 1);
-    if (!aRecord) {
-        throw new Error(`No A record found for ${domain}`);
-    }
-    return aRecord.data;
-}
-
-async function getBasePlexURL() {
-    if (window.basePlexURL) return window.basePlexURL;
-
-    const ip = await resolveIP('ziggyplus.org');
-    // Replace '.' with '-' in the IP
-    const ipDashed = ip.replace(/\./g, '-');
-    // Construct the plex.direct URL using the dashed IP
-    window.basePlexURL = `https://${ipDashed}.4730d278dc5048d9affc7bebed62465b.plex.direct:32400`;
-    
-    return window.basePlexURL;
-}
-
-
 
 async function searchTMDB() {
     currentPage = 1;
@@ -53,13 +22,13 @@ async function loadResults(query, mediaType) {
     try {
         let combinedResults = [];
         if (mediaType === 'both' || mediaType === 'movie') {
-            const movieResponse = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${mov_sec}&query=${encodeURIComponent(query)}&page=${currentPage}`);
+            const movieResponse = await fetch(`/api/tmdb/search/movie?query=${encodeURIComponent(query)}&page=${currentPage}`);
             const movieData = await movieResponse.json();
             combinedResults = [...combinedResults, ...(movieData.results || [])];
             totalPages = movieData.total_pages;
         }
         if (mediaType === 'both' || mediaType === 'tv') {
-            const tvResponse = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${mov_sec}&query=${encodeURIComponent(query)}&page=${currentPage}`);
+            const tvResponse = await fetch(`/api/tmdb/search/tv?query=${encodeURIComponent(query)}&page=${currentPage}`);
             const tvData = await tvResponse.json();
             combinedResults = [...combinedResults, ...(tvData.results || [])];
             totalPages = Math.max(totalPages, tvData.total_pages);
@@ -71,10 +40,10 @@ async function loadResults(query, mediaType) {
                 let detailedData;
                 let mediaType = 'movie';
                 if (result.title) {
-                    detailedResponse = await fetch(`https://api.themoviedb.org/3/movie/${result.id}?api_key=${mov_sec}`);
+                    detailedResponse = await fetch(`/api/tmdb/movie/${result.id}`);
                     detailedData = await detailedResponse.json();
                 } else if (result.name) {
-                    detailedResponse = await fetch(`https://api.themoviedb.org/3/tv/${result.id}?api_key=${mov_sec}`);
+                    detailedResponse = await fetch(`/api/tmdb/tv/${result.id}`);
                     detailedData = await detailedResponse.json();
                     detailedData.seasons_count = detailedData.number_of_seasons;  // Adding seasons count
                     // Determine year range
@@ -110,7 +79,7 @@ async function loadResults(query, mediaType) {
                         </select>
                         ` : ''}
                         <p>${detailedData.overview}</p>
-                        <button class="ziggyButton" data-details="${details}" onclick='sendToTelegram(this, ${detailedData.id})'>Ziggy+ Request This</button>
+                        <button class="ziggyButton" data-details="${details}" onclick='sendRequest(this, ${detailedData.id})'>Ziggy+ Request This</button>
                         <div class="loading-icon" style="display:none;"></div>
                         <div class="success-icon" style="display:none;">&#10004;</div>
                         <div class="error-icon" style="display:none;">&#10008;</div>
@@ -137,45 +106,7 @@ async function loadResults(query, mediaType) {
     }
 }
 
-async function checkIfMovieExists(title, studio, year) {
-    const baseURL = await getBasePlexURL();
-    const url = `${baseURL}/library/sections/3/all?title=${encodeURIComponent(title)}&studio=${encodeURIComponent(studio)}&year=${year}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
-    const response = await fetch(url);
-    const xmlText = await response.text();
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-    const size = xmlDoc.getElementsByTagName('MediaContainer')[0].getAttribute('size');
-    return size > 0;
-}
-
-async function checkIfTVShowExists(title) {
-    const baseURL = await getBasePlexURL();
-    const url = `${baseURL}/library/sections/2/all?title=${encodeURIComponent(title)}&X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
-    const response = await fetch(url);
-    const xmlText = await response.text();
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-    const size = xmlDoc.getElementsByTagName('MediaContainer')[0].getAttribute('size');
-    if (size > 0) {
-        const ratingKey = xmlDoc.getElementsByTagName('Directory')[0].getAttribute('ratingKey');
-        return ratingKey;
-    }
-    return null;
-}
-
-async function checkIfSeasonsExist(ratingKey, seasons) {
-    const baseURL = await getBasePlexURL();
-    const url = `${baseURL}/library/metadata/${ratingKey}/children?X-Plex-Token=8zALx-Umqn4tWkSJdsBT`;
-    const response = await fetch(url);
-    const xmlText = await response.text();
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-    const existingSeasons = Array.from(xmlDoc.getElementsByTagName('Directory')).map(dir => parseInt(dir.getAttribute('index')));
-    const missingSeasons = seasons.filter(season => !existingSeasons.includes(parseInt(season)));
-    return missingSeasons;
-}
-
-async function sendToTelegram(buttonElement, id) {
+async function sendRequest(buttonElement, id) {
     const detailsString = buttonElement.getAttribute('data-details');
     if (!detailsString) {
         console.error('No details found for the selected item.');
@@ -183,56 +114,19 @@ async function sendToTelegram(buttonElement, id) {
     }
 
     const details = JSON.parse(detailsString.replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
-    const { title, studio, year, type } = details;
 
     // Get the requestor's name
     const requestorName = document.getElementById('requestorName').value || 'Anonymous';
 
-    console.log('Details:', details);
-
-    if (type === 'movie') {
-        const exists = await checkIfMovieExists(title, studio, year);
-        if (exists) {
-            alert('Bruh...Did you even check Ziggy+? We have it already.');
-            return;
-        }
-    } else if (type === 'TV Show') {
+    let selectedSeasons = [];
+    if (details.type === 'TV Show') {
         const seasonSelect = document.getElementById(`seasonSelect-${id}`);
         if (details.seasons > 1 && seasonSelect && seasonSelect.selectedOptions.length === 0) {
             alert('Please select at least one season.');
             return;
         }
-
-        const ratingKey = await checkIfTVShowExists(title);
-        if (ratingKey) {
-            const selectedSeasons = seasonSelect ? Array.from(seasonSelect.selectedOptions).map(option => option.value) : [];
-            const missingSeasons = await checkIfSeasonsExist(ratingKey, selectedSeasons);
-            if (missingSeasons.length === 0) {
-                alert('Bruh...Did you even check Ziggy+? We have all of the seasons you selected.');
-                return;
-            } else {
-                details.missingSeasons = missingSeasons;
-            }
-        } else {
-            details.missingSeasons = 'All'; // If the show doesn't exist, we need all seasons.
-        }
+        selectedSeasons = seasonSelect ? Array.from(seasonSelect.selectedOptions).map(option => option.value) : [];
     }
-
-    let selectedSeasons = '';
-    if (details.type === 'TV Show') {
-        const seasonSelect = document.getElementById(`seasonSelect-${id}`);
-        selectedSeasons = seasonSelect ? Array.from(seasonSelect.selectedOptions).map(option => option.value).join(', ') : '';
-    }
-
-    const message = `
-Name: ${requestorName}
-Title: ${details.title}
-Year: ${details.year}
-Type: ${details.type}
-${details.type === 'TV Show' ? `Seasons: ${details.seasons}\nSelected Seasons: ${selectedSeasons}\nMissing Seasons: ${details.missingSeasons}\n` : ''}
-Overview: ${details.overview}
-Poster: ${details.poster}
-`;
 
     const loadingIcon = buttonElement.nextElementSibling;
     const successIcon = loadingIcon.nextElementSibling;
@@ -241,30 +135,39 @@ Poster: ${details.poster}
     buttonElement.style.display = 'none';
     loadingIcon.style.display = 'block';
 
-    fetch(`https://api.telegram.org/bot${tok}/sendMessage`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            chat_id: '-4285186614',  // Replace with your Telegram chat ID
-            text: message
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
+    try {
+        const response = await fetch('/api/request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: details.title,
+                year: details.year,
+                type: details.type,
+                studio: details.studio,
+                overview: details.overview,
+                poster: details.poster,
+                seasons: details.seasons,
+                selectedSeasons: selectedSeasons,
+                requestorName: requestorName
+            })
+        });
+        const data = await response.json();
         loadingIcon.style.display = 'none';
-        if (data.ok) {
+        if (data.status === 'sent') {
             successIcon.style.display = 'block';
+        } else if (data.status === 'exists') {
+            buttonElement.style.display = 'block';
+            alert('Bruh...Did you even check Ziggy+? We have it already.');
         } else {
             errorIcon.style.display = 'block';
         }
-    })
-    .catch(error => {
+    } catch (error) {
         loadingIcon.style.display = 'none';
         errorIcon.style.display = 'block';
-        console.error('Error sending message to Telegram:', error);
-    });
+        console.error('Error sending request:', error);
+    }
 }
 
 document.getElementById('imdbInput').addEventListener('keypress', function(event) {

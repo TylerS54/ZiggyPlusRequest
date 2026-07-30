@@ -1,0 +1,12 @@
+{
+  "name": "functions",
+  "description": "Ziggy+ Request backend — proxies TMDB, Plex, and Telegram so no secrets ship to the browser",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^6.0.0"
+  },
+  "private": true
+}
