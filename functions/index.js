@@ -32,25 +32,72 @@ async function plexFetch(path, params = {}) {
   return response.text();
 }
 
-function containerSize(xml) {
-  const match = xml.match(/<MediaContainer[^>]*\bsize="(\d+)"/);
-  return match ? parseInt(match[1], 10) : 0;
+function decodeEntities(value) {
+  return value
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 }
 
-async function movieExists(title, studio, year) {
-  const xml = await plexFetch(`/library/sections/${PLEX_MOVIE_SECTION}/all`, {
-    title,
-    studio: studio || "",
-    year: year || "",
+function normalizeTitle(title) {
+  return decodeEntities(String(title))
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// Plex's `title` filter is a substring match ("Doc" also returns "Doctor Who"),
+// so pull each item's attributes out and compare titles exactly ourselves.
+function plexItems(xml, tag) {
+  return [...xml.matchAll(new RegExp(`<${tag}\\b([^>]*)>`, "g"))].map((m) => {
+    const attrs = {};
+    for (const [, key, value] of m[1].matchAll(/(\w+)="([^"]*)"/g)) {
+      attrs[key] = decodeEntities(value);
+    }
+    return attrs;
   });
-  return containerSize(xml) > 0;
 }
 
-async function tvShowRatingKey(title) {
+function firstYear(year) {
+  const match = String(year || "").match(/\d{4}/);
+  return match ? parseInt(match[0], 10) : null;
+}
+
+function findExactMatch(items, title, year) {
+  const wanted = normalizeTitle(title);
+  const matches = items.filter(
+    (item) =>
+      normalizeTitle(item.title || "") === wanted ||
+      (item.originalTitle && normalizeTitle(item.originalTitle) === wanted)
+  );
+  const wantedYear = firstYear(year);
+  if (!wantedYear) return matches[0] || null;
+  // Same-titled shows/remakes are common, so require the year to line up
+  // (allow one year of slack for differing premiere/release dates).
+  return (
+    matches.find((item) => {
+      const itemYear = parseInt(item.year, 10);
+      return !itemYear || Math.abs(itemYear - wantedYear) <= 1;
+    }) || null
+  );
+}
+
+async function movieExists(title, year) {
+  const xml = await plexFetch(`/library/sections/${PLEX_MOVIE_SECTION}/all`, { title });
+  return findExactMatch(plexItems(xml, "Video"), title, year) !== null;
+}
+
+async function tvShowRatingKey(title, year) {
   const xml = await plexFetch(`/library/sections/${PLEX_TV_SECTION}/all`, { title });
-  if (containerSize(xml) === 0) return null;
-  const match = xml.match(/<Directory[^>]*\bratingKey="(\d+)"/);
-  return match ? match[1] : null;
+  const show = findExactMatch(plexItems(xml, "Directory"), title, year);
+  return show ? show.ratingKey : null;
 }
 
 async function missingSeasons(ratingKey, seasons) {
@@ -113,14 +160,19 @@ async function handleRequest(req, res) {
 
   let missing = null;
   if (type === "movie") {
-    if (await movieExists(title, studio, year)) {
+    if (await movieExists(title, year)) {
       res.json({ status: "exists" });
       return;
     }
   } else if (type === "TV Show") {
-    const ratingKey = await tvShowRatingKey(title);
+    const ratingKey = await tvShowRatingKey(title, year);
     if (ratingKey) {
-      missing = await missingSeasons(ratingKey, selectedSeasons);
+      // Single-season shows don't render a season picker, so nothing is selected;
+      // check every season rather than treating an empty selection as "have it all".
+      const seasonsToCheck = selectedSeasons.length
+        ? selectedSeasons
+        : Array.from({ length: parseInt(seasons, 10) || 1 }, (_, i) => String(i + 1));
+      missing = await missingSeasons(ratingKey, seasonsToCheck);
       if (missing.length === 0) {
         res.json({ status: "exists" });
         return;
