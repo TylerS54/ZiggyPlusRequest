@@ -2,55 +2,109 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ziggy+ Request Search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0C10">
+    <title>Ziggy+ Requests</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <!-- Firebase SDK -->
-    <script defer src="/__/firebase/10.12.2/firebase-app-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/10.12.2/firebase-performance-compat.js"></script>
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 </head>
-<body>
-    <div class="container small">
-        <div id="searchContainer" class="search-container">
-            <h1>Ziggy+ Request Search</h1>
-            <input type="text" id="requestorName" placeholder="Your Name (Optional)">
-            <input type="text" id="imdbInput" placeholder="Search for Movie or TV Show...">
-            <div class="media-type-selector">
-                <label>
-                    <input type="radio" name="mediaType" value="both" checked> Both
-                </label>
-                <label>
-                    <input type="radio" name="mediaType" value="movie"> Movie
-                </label>
-                <label>
-                    <input type="radio" name="mediaType" value="tv"> TV Show
-                </label>
+<body class="is-home">
+    <div class="app">
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="Ziggy+ home">Ziggy<span>+</span></a>
+            <button type="button" id="nameChip" class="name-chip" aria-haspopup="dialog">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+                <span id="nameChipLabel">Add your name</span>
+            </button>
+        </header>
+
+        <section class="hero">
+            <h1>What should we add next?</h1>
+            <p>Search any movie or show. We'll check Ziggy+ and send your request straight to Ziggy.</p>
+        </section>
+
+        <form id="searchForm" class="search" role="search">
+            <div class="search-field">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <label for="imdbInput" class="sr-only">Search movies and TV shows</label>
+                <input type="search" id="imdbInput" placeholder="Movie or TV show" autocomplete="off" enterkeyhint="search">
+                <button type="button" id="clearSearch" class="icon-button" aria-label="Clear search" hidden>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
             </div>
-            <button onclick="searchTMDB()">Search</button>
-            <div class="donation-buttons">
-                <a href="https://venmo.com/u/Sportsziggy" class="donation-button">Donate with Venmo</a>
-                <a href="https://paypal.me/sportsziggy" class="donation-button">Donate with PayPal</a>
+            <fieldset class="type-toggle">
+                <legend class="sr-only">Media type</legend>
+                <label><input type="radio" name="mediaType" value="both" checked><span>All</span></label>
+                <label><input type="radio" name="mediaType" value="movie"><span>Movies</span></label>
+                <label><input type="radio" name="mediaType" value="tv"><span>TV shows</span></label>
+            </fieldset>
+            <button type="submit" class="button button-primary search-submit">Search</button>
+        </form>
+
+        <main class="results-area">
+            <div id="results" class="results" aria-live="polite"></div>
+            <div id="loader" class="results loader" hidden aria-hidden="true">
+                <div class="card skeleton"><div class="poster"></div><div class="card-body"><i></i><i></i><i></i></div></div>
+                <div class="card skeleton"><div class="poster"></div><div class="card-body"><i></i><i></i><i></i></div></div>
             </div>
-        </div>
-        <div id="resultsContainer" class="results-container">
-            <div id="results" class="results"></div>
-        </div>
+            <div id="sentinel"></div>
+        </main>
+
+        <div class="spacer"></div>
+
+        <footer class="support">
+            <div>
+                <div class="support-title">Keep Ziggy+ running</div>
+                <div class="support-text">Tips help cover storage and the server.</div>
+            </div>
+            <div class="support-links">
+                <a href="https://venmo.com/u/Sportsziggy" class="button button-outline">Venmo</a>
+                <a href="https://paypal.me/sportsziggy" class="button button-outline">PayPal</a>
+            </div>
+        </footer>
     </div>
-    <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <dialog id="nameDialog" class="sheet">
+        <form method="dialog" class="sheet-body">
+            <div class="sheet-handle" aria-hidden="true"></div>
+            <h2 class="sheet-title">Who's asking?</h2>
+            <label for="requestorName" class="field-label">Your name (optional)</label>
+            <input type="text" id="requestorName" class="text-input" placeholder="Anonymous" autocomplete="given-name" enterkeyhint="done">
+            <p class="sheet-note">Ziggy sees this with your requests. It's saved on this device.</p>
+            <button type="submit" class="button button-primary button-large">Save</button>
+        </form>
+    </dialog>
+
+    <dialog id="seasonDialog" class="sheet" aria-labelledby="seasonTitle">
+        <form method="dialog" class="sheet-body" id="seasonForm">
+            <div class="sheet-handle" aria-hidden="true"></div>
+            <div class="sheet-header">
+                <div id="seasonPoster" class="poster poster-small"></div>
+                <div class="sheet-heading">
+                    <h2 id="seasonTitle" class="sheet-title"></h2>
+                    <div id="seasonMeta" class="card-meta-text"></div>
+                </div>
+                <button type="button" class="icon-button icon-button-large" id="seasonClose" aria-label="Close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+            <div class="season-head">
+                <div class="field-label">Which seasons?</div>
+                <button type="button" id="seasonAll" class="text-button">Select all</button>
+            </div>
+            <div id="seasonGrid" class="season-grid"></div>
+            <p class="sheet-note">We'll check which of these Ziggy+ already has and only ask for the missing ones.</p>
+            <button type="submit" id="seasonSubmit" class="button button-primary button-large" disabled>Pick at least one season</button>
+        </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+        <div class="toast-title"></div>
+        <div class="toast-text"></div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
